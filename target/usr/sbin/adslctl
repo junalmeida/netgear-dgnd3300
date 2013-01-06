@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+#  adslctl replace script for cable
+#  Created by Marcos Almeida Jr on 2012-04-28.
+#  MIT License
+#
+
+eval `/usr/sbin/nvram get wan_mode`
+
+if /usr/sbin/[ "$wan_mode" = "dhcpc" ]; then
+	case "$1" in
+		info)
+
+			eval `/usr/sbin/nvram get cable_up`
+			eval `/usr/sbin/nvram get cable_dn`
+
+			if /usr/sbin/[ "$cable_up" = "" ]; then
+				cable_up=1000
+			fi
+			if /usr/sbin/[ "$cable_dn" = "" ]; then
+				cable_dn=20000
+			fi
+
+			/usr/sbin/echo "$0: ADSL driver and PHY status
+Status: ShowtimeRetrain Reason: 0
+Channel: INTR, Upstream rate = $cable_up Kbps, Downstream rate = $cable_dn Kbps
+Link Power State: L0
+Mode:                   G.DMT
+Channel:                Interleave
+Trellis:                ON
+Line Status:            No Defect
+Training Status:        Showtime
+                Down            Up
+SNR (dB):       00.0            00.0
+Attn(dB):       00.0            00.0
+Pwr(dBm):       00.0            00.0
+Max(Kbps):      $cable_dn           $cable_up
+Rate (Kbps):    $cable_dn           $cable_up
+                        G.dmt framing
+K:              72(0)           19
+R:              16              8
+S:              2               8
+D:              32              2
+                        ADSL2 framing
+MSGc:           1               1
+B:              72              19
+M:              2               8
+T:              1               1
+R:              16              8
+S:              2.2191          8.4000
+L:              584             160
+D:              32              2
+                        Counters
+SF:             8081            8081
+SFErr:          0               0
+RS:             274784          67685
+RSCorr:         3               0
+RSUnCorr:       0               0
+
+HEC:            0               0
+OCD:            0               0
+LCD:            0               0
+Total Cells:    736403          0
+Data Cells:     39269           0
+Drop Cells:     61
+Bit Errors:     0               0
+
+ES:             0               0
+SES:            0               0
+UAS:            198             0
+AS:             138
+
+INP:            3.50            0.40
+PER:            1.94            1.83
+delay:          17.75           4.20
+OR:             28.83           30.47
+
+Bitswap:        0               0
+"
+
+			;;
+		*)
+			/usr/sbin/adslct2 $@
+			;;
+	esac
+
+else
+	/usr/sbin/adslct2 $@
+
+fi
+
+exit 0
+

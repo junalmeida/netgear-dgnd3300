@@ -1,0 +1,64 @@
+#!/bin/sh
+
+# udhcpc script edited by Tim Riker <Tim@Rikers.org>
+# edited by Marcos Jr.
+# changes: keep using dnrd
+
+[ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
+
+RESOLV_CONF="/etc/resolv.conf"
+[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
+[ -n "$subnet" ] && NETMASK="netmask $subnet"
+
+
+case "$1" in
+	deconfig)
+		/sbin/ifconfig $interface 0.0.0.0
+		/usr/sbin/rc wan_basic stop
+		/bin/rm /tmp/wan_uptime
+		/bin/rm /tmp/dhcpc.lease
+		/bin/echo > /etc/resolv.conf
+		;;
+
+	renew|bound)
+		/sbin/ifconfig $interface $ip $BROADCAST $NETMASK
+		
+		/bin/cp /proc/uptime /tmp/wan_uptime
+
+		if [ -n "$router" ] ; then
+			echo "deleting routers"
+			while route del default gw 0.0.0.0 dev $interface ; do
+				:
+			done
+
+			for i in $router ; do
+				echo "adding route default gw $i dev $interface"
+				route add default gw $i dev $interface
+			done
+		fi
+		
+		#get configured values
+		eval `nvram get wan_fix_dns`
+		eval `nvram get wan_dns1`
+		eval `nvram get wan_dns2`
+
+		echo -n > $RESOLV_CONF
+		[ -n "$domain" ] && echo search $domain >> $RESOLV_CONF
+
+		if [ "$wan_fix_dns" -ne "1" ] ; then
+			for i in $dns ; do
+				echo adding dns $i
+				echo nameserver $i >> $RESOLV_CONF
+			done
+		else
+			echo adding dns $wan_dns1
+			echo nameserver $wan_dns1 >> $RESOLV_CONF
+			echo adding dns $wan_dns2
+			echo nameserver $wan_dns2 >> $RESOLV_CONF			
+		fi
+		echo "Restarting service..."
+		/usr/sbin/rc service restart
+		;;
+esac
+
+exit 0

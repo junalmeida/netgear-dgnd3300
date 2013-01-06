@@ -1,0 +1,16 @@
+Path: .
+URL: svn://172.31.2.251:36901/svn/Platform/DG834V4/DGND3300/Source
+Repository Root: svn://172.31.2.251:36901/svn/Platform/DG834V4
+Repository UUID: cf59f481-0efb-4984-9059-ba1194d2ff62
+Revision: 2415
+Node Kind: directory
+Schedule: normal
+Last Changed Author: derek
+Last Changed Rev: 2415
+Last Changed Date: 2010-04-14 15:09:52 +0800 (Wed, 14 Apr 2010)
+
+VER: A1.1.00.41_1.00.41NA
+Build from: localhost.localdomain /Platform/DG834V4/DGND3300/Source
+DATE: Wed Apr 14 15:48:32 CST 2010
+BOARD_ID: DGND3300
+Boot Loader CFE version 1.0.37-12.1 for BCM96348 (32bit,SP,BE)

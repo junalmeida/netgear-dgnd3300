@@ -1,0 +1,155 @@
+#!/bin/sh
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin/scripts
+
+UTC=yes
+
+
+mount -n -t proc proc /proc
+mount -n -t sysfs sysfs /sys
+mount -n -t ramfs ramfs /home
+mount -n -t ramfs ramfs /tmp
+mount -n -t ramfs ramfs /mnt
+mount -n -t ramfs ramfs /dev
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
+
+mknod /dev/console c 5 1
+mknod /dev/null c 1 3
+mknod /dev/ptmx c 5 2
+
+# build var directories 
+/bin/mkdir -m 0777 /tmp/var
+/bin/mkdir -m 0777 /var/lock
+/bin/mkdir -m 0777 /var/log
+/bin/mkdir -m 0777 /var/run
+/bin/mkdir -m 0777 /var/tmp
+/bin/mkdir -m 0777 /tmp/etc
+/bin/mkdir -m 0755 /etc/dnrd
+#/bin/mkdir -m 0777 /tmp/mnt
+/bin/mkdir -m 0777 /mnt/shares
+/bin/mkdir -m 0777 /var/run/bftpd
+
+/bin/cp -a /usr/etc/* /etc
+/bin/cp -a /usr/dev/* /dev/
+
+/bin/mknod /dev/sc_led c 225 0
+/bin/mknod /dev/random c 1 8
+/bin/mknod /dev/urandom c 1 9
+
+# insert modules
+/sbin/insmod /lib/modules/bcm_enet.ko
+#/sbin/insmod /lib/modules/vnet.ko
+/sbin/insmod /lib/modules/atmapi.ko
+/sbin/insmod /lib/modules/blaa_dd.ko
+/sbin/insmod /lib/modules/adsldd.ko
+/sbin/insmod /lib/modules/br2684.ko
+/sbin/insmod /lib/modules/led_pb_api.ko
+/sbin/insmod /lib/modules/led_hw.ko
+/sbin/insmod /lib/modules/sc_blink.ko
+#/sbin/insmod /lib/modules/ipt_string.ko 
+/sbin/insmod /lib/modules/ipt_psd.ko
+/sbin/insmod /lib/modules/ipt_random.ko
+/sbin/insmod /lib/modules/ipt_REJECT.ko
+#/sbin/insmod /lib/modules/ipt_mark.ko
+/sbin/insmod /lib/modules/ipt_condition.ko
+/sbin/insmod /lib/modules/ct_mgr.ko
+/sbin/insmod /lib/modules/ipt_PNAT.ko
+/sbin/insmod /lib/modules/sc_priority.ko
+#echo "------------------------------"
+
+/usr/sbin/led_app on 70
+
+/bin/echo "insmod finish" > /dev/console
+# Add for web slow response
+
+#echo "Start usbdecting ..."
+#/sbin/udevstart
+
+#echo "/sbin/udev" > /proc/sys/kernel/hotplug
+#/usr/sbin/usbdect &
+
+# for retrain margin the rc.sh is generate in rc/Makefile
+/usr/sbin/rc.sh
+
+
+# start services
+
+/usr/sbin/brctl addbr br0
+/usr/sbin/brctl stp br0 no
+/sbin/ifconfig eth0 up
+/usr/sbin/brctl addif br0 eth0
+/sbin/ifconfig eth1 up
+/usr/sbin/brctl addif br0 eth1
+
+/usr/sbin/brctl addbr br1
+#/usr/sbin/brctl stp br1 no
+
+# stamp lan start time
+/bin/cp /proc/uptime /tmp/lan_uptime
+
+ifconfig lo 127.0.0.1
+route add -net 127.0.0.0 netmask 255.0.0.0 lo
+
+#JIM force to use IGMP v2
+echo "2" > /proc/sys/net/ipv4/conf/all/force_igmp_version
+
+# debug staff 
+#/usr/sbin/micro_inetd 23 /usr/sbin/utelnetd&
+
+#/usr/sbin/utelnetd -d&
+cp -f /usr/sbin/setupwizard.cgi /tmp/setupwizard.cgi
+/sbin/klogd&
+
+# Move up by Joel for DG834NR WPA function.
+/usr/sbin/cmd_agent_ap
+
+/usr/sbin/rc init
+/usr/sbin/scfgmgr
+
+/bin/echo "=============rc start " > /dev/console
+/usr/sbin/rc start
+/bin/echo "=============rc finish " > /dev/console
+
+
+#/usr/sbin/dproxy -c /etc/resolv.conf&
+
+
+/usr/sbin/crond &
+
+/usr/sbin/atm_monitor init
+/usr/sbin/multi_pb_app 90 91 10 40&
+
+#Ron add for upnpd
+route add -net 239.0.0.0 netmask 255.0.0.0 br0
+#route add -net 239.0.0.0 netmask 255.0.0.0 br1
+
+#echo "0 0" > /proc/sys/vm/pagetable_cache
+# router
+echo 1 > /proc/sys/net/ipv4/ip_forward
+# pppox
+echo 1 > /proc/sys/net/ipv4/ip_dynaddr
+
+# add more conntrack 
+echo 2048 > /proc/sys/net/nf_conntrack_max
+
+# ignore_all not yet used: this should be satisfactory
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+# drop spoofed addr: turn this off when rip is on ?
+echo 1 > /proc/sys/net/ipv4/conf/default/rp_filter
+echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+# do not honor source route flags
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_source_route
+echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
+# this needs proper sampling on av_blog to determine optimal value
+# for now just observe softnet_stats to see # time was throttled
+# historical value was 300
+echo 100 > /proc/sys/net/core/netdev_max_backlog
+echo 60 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
+
+#/usr/sbin/micro_inetd 21 /usr/sbin/ftpd&
+
+#added by Marcos Almeida Jr - cable modem conectivity
+/usr/etc/netgear-check.sh &
+
+
+
