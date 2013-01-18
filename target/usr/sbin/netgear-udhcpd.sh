@@ -1,5 +1,4 @@
 #!/bin/sh
-
 #  netgear-udhcpd.sh
 #
 #  Created by Marcos Almeida Jr on 2012-04-19.
@@ -33,6 +32,9 @@ option  dns     $lan_ipaddr
 option  lease   86400
 leases_file	 $leases_file" > $conf_file
 
+          echo ""
+          echo ""
+          echo ""
           echo "$0: udhcpd configuration changed."
           
           pid=`ps | grep "udhcpd $conf_file" | grep -v grep`;

@@ -56,6 +56,10 @@ for item in "$@"; do
           fi
 
           if [ "$item" != "UNKNOWN" -a "$item" != "" -a "$already_set" = "no" ]; then
+               echo ""
+               echo ""
+               echo ""
+               echo ""
                echo "$0: found: $last_ip $item" 
                echo "$last_ip $item #set dinamically" >> $hosts_file
                restart_dnrd="yes"

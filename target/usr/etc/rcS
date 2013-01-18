@@ -149,7 +149,4 @@ echo 60 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
 #/usr/sbin/micro_inetd 21 /usr/sbin/ftpd&
 
 #added by Marcos Almeida Jr - cable modem conectivity
-/usr/etc/netgear-check.sh &
-
-
-
+/usr/sbin/netgear-check.sh &
